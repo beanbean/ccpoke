@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-import { InstallMethod } from "./constants.js";
+import { InstallMethod, PackageManager } from "./constants.js";
 
 const MAX_GIT_SEARCH_DEPTH = 5;
 export type { InstallMethod } from "./constants.js";
@@ -48,4 +48,13 @@ export function getGitRepoRoot(dir: string): string | null {
 
 function isGitRepo(dir: string): boolean {
   return getGitRepoRoot(dir) !== null;
+}
+
+export function detectGlobalPackageManager(): PackageManager {
+  const scriptPath = process.argv[1] ?? "";
+
+  if (scriptPath.includes(PackageManager.Pnpm)) return PackageManager.Pnpm;
+  if (scriptPath.includes(PackageManager.Yarn)) return PackageManager.Yarn;
+  if (scriptPath.includes(PackageManager.Bun)) return PackageManager.Bun;
+  return PackageManager.Npm;
 }

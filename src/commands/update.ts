@@ -8,7 +8,11 @@ import { createDefaultRegistry } from "../agent/agent-registry.js";
 import { ConfigManager } from "../config-manager.js";
 import { t } from "../i18n/index.js";
 import { InstallMethod, PackageManager } from "../utils/constants.js";
-import { detectInstallMethod, getGitRepoRoot } from "../utils/install-detection.js";
+import {
+  detectGlobalPackageManager,
+  detectInstallMethod,
+  getGitRepoRoot,
+} from "../utils/install-detection.js";
 import { getPackageVersion } from "../utils/paths.js";
 
 export function runUpdate(): void {
@@ -29,15 +33,6 @@ export function runUpdate(): void {
       updateGitClone();
       break;
   }
-}
-
-function detectGlobalPackageManager(): PackageManager {
-  const scriptPath = process.argv[1] ?? "";
-
-  if (scriptPath.includes(PackageManager.Pnpm)) return PackageManager.Pnpm;
-  if (scriptPath.includes(PackageManager.Yarn)) return PackageManager.Yarn;
-  if (scriptPath.includes(PackageManager.Bun)) return PackageManager.Bun;
-  return PackageManager.Npm;
 }
 
 function updateGlobal(): void {

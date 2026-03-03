@@ -1,10 +1,10 @@
-import { execSync } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
 
 import * as p from "@clack/prompts";
 
 import { t } from "../i18n/index.js";
 import { InstallMethod, PackageManager } from "./constants.js";
-import { detectInstallMethod } from "./install-detection.js";
+import { detectGlobalPackageManager, detectInstallMethod } from "./install-detection.js";
 import { getPackageVersion } from "./paths.js";
 
 const NPM_REGISTRY_URL = "https://registry.npmjs.org/ccpoke/latest";
@@ -29,8 +29,7 @@ function isNewerVersion(current: string, latest: string): boolean {
   return false;
 }
 
-function getUpdateCommand(): string {
-  const method = detectInstallMethod();
+function getUpdateCommand(method: InstallMethod): string {
   switch (method) {
     case InstallMethod.Npx:
       return "npx -y ccpoke@latest";
@@ -76,38 +75,34 @@ export async function fetchUpdateInfo(): Promise<UpdateInfo | null> {
   return null;
 }
 
-function detectGlobalPackageManager(): PackageManager {
-  const scriptPath = process.argv[1] ?? "";
-
-  if (scriptPath.includes(PackageManager.Pnpm)) return PackageManager.Pnpm;
-  if (scriptPath.includes(PackageManager.Yarn)) return PackageManager.Yarn;
-  if (scriptPath.includes(PackageManager.Bun)) return PackageManager.Bun;
-  return PackageManager.Npm;
-}
-
 function runUpdateInline(): boolean {
-  const method = detectInstallMethod();
+  const pm = detectGlobalPackageManager();
+  const pkg = "ccpoke";
+  const cmd =
+    pm === PackageManager.Yarn ? `yarn global add ${pkg}` : `${pm} install -g ${pkg}@latest`;
 
-  if (method === InstallMethod.Npx) return true;
-
-  if (method === InstallMethod.Global) {
-    const pm = detectGlobalPackageManager();
-    const pkg = "ccpoke";
-    const cmd =
-      pm === PackageManager.Yarn ? `yarn global add ${pkg}` : `${pm} install -g ${pkg}@latest`;
-
-    try {
-      execSync(cmd, { stdio: "pipe" });
-      return true;
-    } catch {
-      return false;
-    }
+  try {
+    execSync(cmd, { stdio: "pipe" });
+    return true;
+  } catch {
+    return false;
   }
-
-  return false;
 }
 
 export async function promptUpdateOrContinue(info: UpdateInfo): Promise<void> {
+  const method = detectInstallMethod();
+
+  if (method === InstallMethod.Npx || method === InstallMethod.GitClone) {
+    p.log.warn(
+      t("versionCheck.updateAvailable", {
+        current: info.currentVersion,
+        latest: info.latestVersion,
+      })
+    );
+    p.log.info(t("versionCheck.runToUpdate", { command: getUpdateCommand(method) }));
+    return;
+  }
+
   const updateLabel = `${t("versionCheck.updatePrompt", { latest: info.latestVersion })} (v${info.currentVersion} → v${info.latestVersion})`;
   const continueLabel = t("versionCheck.continueWithoutUpdate", {
     current: info.currentVersion,
@@ -127,18 +122,33 @@ export async function promptUpdateOrContinue(info: UpdateInfo): Promise<void> {
   if (p.isCancel(result) || result === "continue") return;
 
   const s = p.spinner();
-  s.start(t("versionCheck.runToUpdate", { command: getUpdateCommand() }));
+  s.start(t("versionCheck.updating"));
 
   const success = runUpdateInline();
 
   if (success) {
     s.stop(`✅ v${info.currentVersion} → v${info.latestVersion}`);
-    p.log.info(t("versionCheck.runToUpdate", { command: getUpdateCommand() }));
-    process.exit(0);
+    p.log.info(t("versionCheck.restarting"));
+    await respawnSelf();
   } else {
     s.stop("❌");
-    p.log.warn(t("versionCheck.runToUpdate", { command: getUpdateCommand() }));
+    p.log.warn(t("versionCheck.runToUpdate", { command: getUpdateCommand(method) }));
   }
+}
+
+function respawnSelf(): Promise<never> {
+  const [execPath, scriptPath, ...rest] = process.argv;
+  const child = spawn(execPath!, [scriptPath!, ...rest], {
+    stdio: "inherit",
+  });
+
+  const forward = (signal: NodeJS.Signals) => child.kill(signal);
+  process.on("SIGTERM", forward);
+  process.on("SIGHUP", forward);
+
+  child.on("exit", (code) => process.exit(code ?? 0));
+  child.on("error", () => process.exit(1));
+  return new Promise(() => {});
 }
 
 export async function checkForUpdates(): Promise<void> {
