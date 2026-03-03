@@ -8,6 +8,7 @@ import { t } from "../i18n/index.js";
 import { promptPath } from "../utils/path-prompt.js";
 
 const ADD_NEW = "__add_new__" as const;
+const EXIT = "__exit__" as const;
 
 export async function runProject(): Promise<void> {
   p.intro(t("projectCmd.intro"));
@@ -20,37 +21,36 @@ export async function runProject(): Promise<void> {
     return;
   }
 
-  const options: { value: string; label: string }[] = [
-    { value: ADD_NEW, label: t("projectCmd.addNew") },
-    ...cfg.projects.map((proj, i) => ({
-      value: proj.name,
-      label: `${i + 1}. ${proj.name} → ${proj.path}`,
-    })),
-  ];
+  for (;;) {
+    if (cfg.projects.length === 0) break;
 
-  const choice = await p.select({ message: t("projectCmd.selectAction"), options });
+    const options: { value: string; label: string }[] = [
+      { value: ADD_NEW, label: t("projectCmd.addNew") },
+      ...cfg.projects.map((proj, i) => ({
+        value: proj.name,
+        label: `${i + 1}. ${proj.name} → ${proj.path}`,
+      })),
+      { value: EXIT, label: t("projectCmd.exit") },
+    ];
 
-  if (p.isCancel(choice)) {
-    p.cancel(t("projectCmd.cancelled"));
-    return;
+    const choice = await p.select({ message: t("projectCmd.selectAction"), options });
+
+    if (p.isCancel(choice) || choice === EXIT) return;
+
+    if (choice === ADD_NEW) {
+      await addProjectFlow(cfg);
+      continue;
+    }
+
+    const project = cfg.projects.find((proj) => proj.name === choice)!;
+    await projectActionFlow(cfg, project);
   }
-
-  if (choice === ADD_NEW) {
-    await addProjectFlow(cfg);
-    return;
-  }
-
-  const project = cfg.projects.find((proj) => proj.name === choice)!;
-  await projectActionFlow(cfg, project);
 }
 
 async function addProjectFlow(cfg: ReturnType<typeof ConfigManager.load>): Promise<void> {
   const rawPath = await promptPath(t("projectCmd.pathMessage"), process.cwd());
 
-  if (p.isCancel(rawPath)) {
-    p.cancel(t("projectCmd.cancelled"));
-    return;
-  }
+  if (p.isCancel(rawPath)) return;
 
   const pathStr = rawPath as string;
   if (!pathStr) {
@@ -74,15 +74,12 @@ async function addProjectFlow(cfg: ReturnType<typeof ConfigManager.load>): Promi
     },
   });
 
-  if (p.isCancel(name)) {
-    p.cancel(t("projectCmd.cancelled"));
-    return;
-  }
+  if (p.isCancel(name)) return;
 
   const trimmedName = (name as string).trim();
   cfg.projects.push({ name: trimmedName, path: fullPath });
   ConfigManager.save(cfg);
-  p.outro(t("projectCmd.added", { name: trimmedName, path: fullPath }));
+  p.log.success(t("projectCmd.added", { name: trimmedName, path: fullPath }));
 }
 
 async function projectActionFlow(
@@ -97,10 +94,7 @@ async function projectActionFlow(
     ],
   });
 
-  if (p.isCancel(action)) {
-    p.cancel(t("projectCmd.cancelled"));
-    return;
-  }
+  if (p.isCancel(action)) return;
 
   if (action === "edit") {
     await editProjectFlow(cfg, project);
@@ -115,10 +109,7 @@ async function editProjectFlow(
 ): Promise<void> {
   const rawPath = await promptPath(t("projectCmd.pathMessage"), project.path);
 
-  if (p.isCancel(rawPath)) {
-    p.cancel(t("projectCmd.cancelled"));
-    return;
-  }
+  if (p.isCancel(rawPath)) return;
 
   const pathStr = rawPath as string;
   if (!pathStr) {
@@ -143,16 +134,13 @@ async function editProjectFlow(
     },
   });
 
-  if (p.isCancel(name)) {
-    p.cancel(t("projectCmd.cancelled"));
-    return;
-  }
+  if (p.isCancel(name)) return;
 
   const trimmedName = (name as string).trim();
   const idx = cfg.projects.findIndex((proj) => proj.name === project.name);
   cfg.projects[idx] = { name: trimmedName, path: fullPath };
   ConfigManager.save(cfg);
-  p.outro(t("projectCmd.updated", { name: trimmedName, path: fullPath }));
+  p.log.success(t("projectCmd.updated", { name: trimmedName, path: fullPath }));
 }
 
 async function removeProjectFlow(
@@ -163,13 +151,10 @@ async function removeProjectFlow(
     message: t("projectCmd.confirmRemove", { name: project.name }),
   });
 
-  if (p.isCancel(confirmed) || !confirmed) {
-    p.cancel(t("projectCmd.cancelled"));
-    return;
-  }
+  if (p.isCancel(confirmed) || !confirmed) return;
 
   const idx = cfg.projects.findIndex((proj) => proj.name === project.name);
   cfg.projects.splice(idx, 1);
   ConfigManager.save(cfg);
-  p.outro(t("projectCmd.removed", { name: project.name }));
+  p.log.success(t("projectCmd.removed", { name: project.name }));
 }
