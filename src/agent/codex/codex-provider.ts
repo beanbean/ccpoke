@@ -53,7 +53,7 @@ export class CodexProvider implements AgentProvider {
     const event = parseNotifyEvent(raw);
     logDebug(`[Codex:raw] threadId=${event.threadId} cwd=${event.cwd}`);
 
-    let rollout = { model: "", durationMs: 0, inputTokens: 0, outputTokens: 0 };
+    let rollout = { model: "" };
     try {
       if (event.threadId) rollout = parseRolloutFile(event.threadId);
     } catch {
@@ -67,10 +67,7 @@ export class CodexProvider implements AgentProvider {
     return {
       projectName: extractProjectName(event.cwd),
       responseSummary: event.lastAssistantMessage,
-      durationMs: rollout.durationMs,
       gitChanges,
-      inputTokens: rollout.inputTokens,
-      outputTokens: rollout.outputTokens,
       model: rollout.model,
       agentSessionId: event.threadId || undefined,
       cwd: event.cwd,
@@ -86,10 +83,7 @@ export class CodexProvider implements AgentProvider {
     return {
       projectName: cwd ? extractProjectName(cwd) : "unknown",
       responseSummary: "",
-      durationMs: 0,
       gitChanges: cwd ? collectGitChanges(cwd) : [],
-      inputTokens: 0,
-      outputTokens: 0,
       model: "",
       cwd,
       tmuxTarget,

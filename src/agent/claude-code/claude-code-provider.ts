@@ -14,7 +14,6 @@ import { ClaudeCodeInstaller } from "./claude-code-installer.js";
 import { extractProjectName, isValidStopEvent, parseTranscript } from "./claude-code-parser.js";
 
 const TRANSCRIPT_SETTLE_DELAY_MS = 500;
-const DEFAULT_FALLBACK_DURATION_MS = 1000;
 
 export class ClaudeCodeProvider implements AgentProvider {
   readonly name = AgentName.ClaudeCode;
@@ -49,9 +48,6 @@ export class ClaudeCodeProvider implements AgentProvider {
 
     let summary = {
       lastAssistantMessage: "",
-      durationMs: 0,
-      inputTokens: 0,
-      outputTokens: 0,
       model: "",
     };
 
@@ -63,21 +59,13 @@ export class ClaudeCodeProvider implements AgentProvider {
 
     const gitChanges = collectGitChanges(raw.cwd);
 
-    let durationMs = Math.max(0, summary.durationMs);
-    if (durationMs === 0 && summary.lastAssistantMessage) {
-      durationMs = DEFAULT_FALLBACK_DURATION_MS;
-    }
-
     const obj = raw as unknown as Record<string, unknown>;
     const tmuxTarget = typeof obj.tmux_target === "string" ? obj.tmux_target : undefined;
 
     return {
       projectName: extractProjectName(raw.cwd, raw.transcript_path),
       responseSummary: summary.lastAssistantMessage,
-      durationMs,
       gitChanges,
-      inputTokens: summary.inputTokens,
-      outputTokens: summary.outputTokens,
       model: summary.model,
       agentSessionId: raw.session_id,
       cwd: raw.cwd,
@@ -94,10 +82,7 @@ export class ClaudeCodeProvider implements AgentProvider {
     return {
       projectName: cwd ? extractProjectName(cwd, transcriptPath) : "unknown",
       responseSummary: "",
-      durationMs: 0,
       gitChanges: cwd ? collectGitChanges(cwd) : [],
-      inputTokens: 0,
-      outputTokens: 0,
       model: "",
       agentSessionId: typeof obj.session_id === "string" ? obj.session_id : undefined,
       cwd,

@@ -55,15 +55,10 @@ export class CursorProvider implements AgentProvider {
     logDebug(`[Cursor:raw] ${JSON.stringify(raw)}`);
 
     const composerData = readComposerData(event.conversationId);
-    logDebug(
-      `[Cursor:composer] model=${composerData.model || "NONE"} durationMs=${composerData.durationMs}`
-    );
+    logDebug(`[Cursor:composer] model=${composerData.model || "NONE"}`);
 
     let summary = {
       lastAssistantMessage: "",
-      durationMs: 0,
-      inputTokens: 0,
-      outputTokens: 0,
       model: "",
     };
 
@@ -88,10 +83,7 @@ export class CursorProvider implements AgentProvider {
     return {
       projectName: extractProjectName(event.cwd, event.transcriptPath),
       responseSummary: summary.lastAssistantMessage,
-      durationMs: composerData.durationMs,
       gitChanges,
-      inputTokens: summary.inputTokens,
-      outputTokens: summary.outputTokens,
       model: composerData.model || event.model,
       agentSessionId: event.conversationId,
       cwd: event.cwd,
@@ -108,10 +100,7 @@ export class CursorProvider implements AgentProvider {
     return {
       projectName: cwd ? extractProjectName(cwd, transcriptPath) : "unknown",
       responseSummary: "",
-      durationMs: 0,
       gitChanges: cwd ? collectGitChanges(cwd) : [],
-      inputTokens: 0,
-      outputTokens: 0,
       model: "",
       cwd,
       tmuxTarget,

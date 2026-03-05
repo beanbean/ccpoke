@@ -32,10 +32,7 @@ export interface AgentProvider {
 export interface AgentEventResult {
   projectName: string;
   responseSummary: string;
-  durationMs: number;
   gitChanges: GitChange[];
-  inputTokens: number;
-  outputTokens: number;
   model: string;
   agentSessionId?: string;
   cwd?: string;

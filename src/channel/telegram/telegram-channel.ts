@@ -14,7 +14,7 @@ import type { SessionStateManager } from "../../tmux/session-state.js";
 import type { TmuxBridge } from "../../tmux/tmux-bridge.js";
 import { log, logDebug, logError, logWarn } from "../../utils/log.js";
 import { extractProseSnippet } from "../../utils/markdown.js";
-import { formatDuration, formatModelName, formatTokenCount } from "../../utils/stats-format.js";
+import { formatModelName } from "../../utils/stats-format.js";
 import { autoTrustWorkspace, launchAgent } from "../agent-launcher.js";
 import type { ChannelDeps, NotificationChannel, NotificationData } from "../types.js";
 import { AskQuestionHandler } from "./ask-question-handler.js";
@@ -130,10 +130,7 @@ export class TelegramChannel implements NotificationChannel {
     const parts: string[] = [];
 
     const titleLine = `📦 *${escapeMarkdownV2(data.projectName)}*`;
-    let metaLine = `🐾 ${escapeMarkdownV2(data.agentDisplayName)}`;
-    if (data.durationMs > 0) {
-      metaLine += ` · ⏱ ${escapeMarkdownV2(formatDuration(data.durationMs))}`;
-    }
+    const metaLine = `🐾 ${escapeMarkdownV2(data.agentDisplayName)}`;
     parts.push(`${titleLine}\n${metaLine}`);
 
     if (data.responseSummary) {
@@ -145,12 +142,6 @@ export class TelegramChannel implements NotificationChannel {
       }
     } else {
       parts.push(escapeMarkdownV2("✅ Task done"));
-    }
-
-    if (data.inputTokens > 0 || data.outputTokens > 0) {
-      const inLabel = escapeMarkdownV2(`In: ${formatTokenCount(data.inputTokens)}`);
-      const outLabel = escapeMarkdownV2(`Out: ${formatTokenCount(data.outputTokens)}`);
-      parts.push(`📊 ${inLabel} · ${outLabel}`);
     }
 
     if (data.model) {

@@ -35,28 +35,18 @@ interface TranscriptEntry {
   type?: string;
   message?: MessageContent;
   timestamp?: string;
-  durationMs?: number;
-  sessionId?: string;
-  parentUuid?: string;
-  uuid?: string;
   summary?: string;
 }
 
 interface MessageContent {
   role: string;
   content?: ContentPart[];
-  usage?: TokenUsage;
   model?: string;
 }
 
 interface ContentPart {
   type: string;
   text?: string;
-}
-
-interface TokenUsage {
-  input_tokens?: number;
-  output_tokens?: number;
 }
 
 export interface StopEvent {
@@ -67,9 +57,6 @@ export interface StopEvent {
 
 export interface TranscriptSummary {
   lastAssistantMessage: string;
-  durationMs: number;
-  inputTokens: number;
-  outputTokens: number;
   model: string;
 }
 
@@ -90,10 +77,6 @@ export function parseTranscript(transcriptPath: string): TranscriptSummary {
 
   let lastAssistantText = "";
   let summaryText = "";
-  let lastUserTimestamp: Date | null = null;
-  let lastAssistantTimestamp: Date | null = null;
-  let turnInputTokens = 0;
-  let turnOutputTokens = 0;
   let model = "";
 
   for (const line of lines) {
@@ -111,51 +94,25 @@ export function parseTranscript(transcriptPath: string): TranscriptSummary {
     }
 
     const msg = entry.message;
-    if (msg?.role === "user" && entry.timestamp) {
-      const d = new Date(entry.timestamp);
-      if (!isNaN(d.getTime())) {
-        lastUserTimestamp = d;
-        turnInputTokens = 0;
-        turnOutputTokens = 0;
-        lastAssistantTimestamp = null;
-        lastAssistantText = "";
-        model = "";
-      }
+    if (msg?.role === "user") {
+      lastAssistantText = "";
+      model = "";
     }
 
     if (msg?.role === "assistant") {
-      if (entry.timestamp) {
-        const d = new Date(entry.timestamp);
-        if (!isNaN(d.getTime())) lastAssistantTimestamp = d;
-      }
-
       const rawContent = msg.content ?? [];
       const contentArray = Array.isArray(rawContent) ? rawContent : [];
       const text = extractTextFromContent(contentArray);
       if (text) lastAssistantText = text;
 
       if (msg.model) model = msg.model;
-
-      if (msg.usage) {
-        const inp = msg.usage.input_tokens ?? 0;
-        if (inp > 0) turnInputTokens = inp;
-        turnOutputTokens += msg.usage.output_tokens ?? 0;
-      }
     }
-  }
-
-  let durationMs = 0;
-  if (lastUserTimestamp && lastAssistantTimestamp && lastAssistantTimestamp > lastUserTimestamp) {
-    durationMs = lastAssistantTimestamp.getTime() - lastUserTimestamp.getTime();
   }
 
   const finalMessage = lastAssistantText || summaryText;
 
   return {
     lastAssistantMessage: finalMessage,
-    durationMs,
-    inputTokens: turnInputTokens,
-    outputTokens: turnOutputTokens,
     model,
   };
 }

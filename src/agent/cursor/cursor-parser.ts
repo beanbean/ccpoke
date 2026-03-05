@@ -41,9 +41,6 @@ export interface StopEvent {
 
 export interface TranscriptSummary {
   lastAssistantMessage: string;
-  durationMs: number;
-  inputTokens: number;
-  outputTokens: number;
   model: string;
 }
 
@@ -93,7 +90,7 @@ function resolveAgentTranscriptPath(cwd: string, conversationId: string): string
 
 export function parseTranscript(transcriptPath: string): TranscriptSummary {
   if (!existsSync(transcriptPath)) {
-    return { lastAssistantMessage: "", durationMs: 0, inputTokens: 0, outputTokens: 0, model: "" };
+    return { lastAssistantMessage: "", model: "" };
   }
 
   const raw = readFileSync(transcriptPath, "utf-8");
@@ -125,9 +122,6 @@ export function parseTranscript(transcriptPath: string): TranscriptSummary {
 
   return {
     lastAssistantMessage: lastAssistantText,
-    durationMs: 0,
-    inputTokens: 0,
-    outputTokens: 0,
     model: "",
   };
 }

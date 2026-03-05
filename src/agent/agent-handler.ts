@@ -208,7 +208,6 @@ export class AgentHandler {
       id,
       api: apiBase,
       p: data.projectName,
-      d: String(data.durationMs),
       a: data.agent,
     });
     return `${MINI_APP_BASE_URL}/response/?${params.toString()}`;

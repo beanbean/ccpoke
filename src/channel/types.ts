@@ -30,10 +30,7 @@ export interface NotificationData {
   agentDisplayName: string;
   projectName: string;
   responseSummary: string;
-  durationMs: number;
   gitChanges: GitChange[];
-  inputTokens: number;
-  outputTokens: number;
   model: string;
   sessionId?: string;
 }

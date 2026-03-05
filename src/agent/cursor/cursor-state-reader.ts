@@ -7,12 +7,10 @@ import Database from "better-sqlite3";
 import { isMacOS, isWindows } from "../../utils/constants.js";
 
 export interface CursorComposerData {
-  durationMs: number;
   model: string;
 }
 
 const EMPTY_COMPOSER_DATA: CursorComposerData = {
-  durationMs: 0,
   model: "",
 };
 
@@ -28,16 +26,12 @@ function getCursorStateDbPath(): string {
 
 const COMPOSER_QUERY = `
   SELECT
-    json_extract(value, '$.createdAt') as createdAt,
-    json_extract(value, '$.lastUpdatedAt') as lastUpdatedAt,
     json_extract(value, '$.modelConfig.modelName') as modelName
   FROM cursorDiskKV
   WHERE key = ?
 `;
 
 interface ComposerRow {
-  createdAt: number | null;
-  lastUpdatedAt: number | null;
   modelName: string | null;
 }
 
@@ -55,12 +49,7 @@ export function readComposerData(conversationId: string): CursorComposerData {
 
     if (!row) return EMPTY_COMPOSER_DATA;
 
-    const created = row.createdAt ?? 0;
-    const updated = row.lastUpdatedAt ?? 0;
-    const durationMs = created > 0 && updated > created ? updated - created : 0;
-
     return {
-      durationMs,
       model: row.modelName ?? "",
     };
   } catch {

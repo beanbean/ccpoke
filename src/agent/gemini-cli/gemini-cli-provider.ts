@@ -51,7 +51,7 @@ export class GeminiCliProvider implements AgentProvider {
     const event = parseAfterAgentEvent(raw);
     logDebug(`[GeminiCli:raw] sessionId=${event.sessionId} cwd=${event.cwd}`);
 
-    let usage = { model: "", durationMs: 0, inputTokens: 0, outputTokens: 0 };
+    let usage = { model: "" };
     try {
       if (event.transcriptPath) usage = parseTranscriptForUsage(event.transcriptPath);
     } catch {
@@ -65,10 +65,7 @@ export class GeminiCliProvider implements AgentProvider {
     return {
       projectName: extractProjectName(event.cwd),
       responseSummary: event.promptResponse,
-      durationMs: usage.durationMs,
       gitChanges,
-      inputTokens: usage.inputTokens,
-      outputTokens: usage.outputTokens,
       model: usage.model,
       agentSessionId: event.sessionId || undefined,
       cwd: event.cwd,
@@ -84,10 +81,7 @@ export class GeminiCliProvider implements AgentProvider {
     return {
       projectName: cwd ? extractProjectName(cwd) : "unknown",
       responseSummary: "",
-      durationMs: 0,
       gitChanges: cwd ? collectGitChanges(cwd) : [],
-      inputTokens: 0,
-      outputTokens: 0,
       model: "",
       cwd,
       tmuxTarget,

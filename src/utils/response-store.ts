@@ -14,10 +14,7 @@ export interface StoredResponse {
   agentDisplayName: string;
   projectName: string;
   responseSummary: string;
-  durationMs: number;
   gitChanges: Array<{ file: string; status: GitChangeStatus }>;
-  inputTokens: number;
-  outputTokens: number;
   model: string;
   timestamp: number;
 }

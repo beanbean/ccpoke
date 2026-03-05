@@ -1,7 +1,7 @@
 import type { KnownBlock } from "@slack/web-api";
 
 import { extractProseSnippet } from "../../utils/markdown.js";
-import { formatDuration, formatModelName, formatTokenCount } from "../../utils/stats-format.js";
+import { formatModelName } from "../../utils/stats-format.js";
 import type { NotificationData } from "../types.js";
 
 const RESPONSE_TEXT_MAX = 2800;
@@ -21,10 +21,6 @@ export function buildNotificationBlocks(
     { type: "mrkdwn", text: `*Agent*\n${data.agentDisplayName}` },
   ];
 
-  if (data.durationMs > 0) {
-    fields.push({ type: "mrkdwn", text: `*Duration*\n${formatDuration(data.durationMs)}` });
-  }
-
   blocks.push({ type: "section", fields });
 
   const summaryText = data.responseSummary
@@ -37,13 +33,6 @@ export function buildNotificationBlocks(
   });
 
   const contextElements: { type: "mrkdwn"; text: string }[] = [];
-
-  if (data.inputTokens > 0 || data.outputTokens > 0) {
-    contextElements.push({
-      type: "mrkdwn",
-      text: `In: ${formatTokenCount(data.inputTokens)} · Out: ${formatTokenCount(data.outputTokens)}`,
-    });
-  }
 
   if (data.model) {
     contextElements.push({ type: "mrkdwn", text: formatModelName(data.model) });

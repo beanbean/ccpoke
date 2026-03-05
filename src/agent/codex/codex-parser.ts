@@ -12,12 +12,9 @@ export interface CodexNotifyEvent {
 
 export interface RolloutSummary {
   model: string;
-  durationMs: number;
-  inputTokens: number;
-  outputTokens: number;
 }
 
-const EMPTY_ROLLOUT: RolloutSummary = { model: "", durationMs: 0, inputTokens: 0, outputTokens: 0 };
+const EMPTY_ROLLOUT: RolloutSummary = { model: "" };
 
 export function isValidNotifyEvent(data: unknown): data is Record<string, unknown> {
   if (typeof data !== "object" || data === null) return false;
@@ -49,10 +46,6 @@ export function parseRolloutFile(threadId: string): RolloutSummary {
     const lines = content.split("\n").filter((l) => l.trim());
 
     let model = "";
-    let inputTokens = 0;
-    let outputTokens = 0;
-    let firstTimestamp = 0;
-    let lastTimestamp = 0;
 
     for (const line of lines) {
       let obj: Record<string, unknown>;
@@ -63,31 +56,9 @@ export function parseRolloutFile(threadId: string): RolloutSummary {
       }
 
       if (typeof obj.model === "string" && obj.model) model = obj.model;
-
-      const usage = obj.usage as Record<string, unknown> | undefined;
-      if (usage && typeof usage === "object") {
-        if (typeof usage.input_tokens === "number") inputTokens += usage.input_tokens;
-        if (typeof usage.output_tokens === "number") outputTokens += usage.output_tokens;
-      }
-
-      const ts =
-        typeof obj.timestamp === "number"
-          ? obj.timestamp
-          : typeof obj.created_at === "number"
-            ? obj.created_at
-            : 0;
-      if (ts > 0) {
-        if (firstTimestamp === 0 || ts < firstTimestamp) firstTimestamp = ts;
-        if (ts > lastTimestamp) lastTimestamp = ts;
-      }
     }
 
-    const durationMs =
-      firstTimestamp > 0 && lastTimestamp > firstTimestamp
-        ? Math.round((lastTimestamp - firstTimestamp) * 1000)
-        : 0;
-
-    return { model, durationMs, inputTokens, outputTokens };
+    return { model };
   } catch {
     return EMPTY_ROLLOUT;
   }
