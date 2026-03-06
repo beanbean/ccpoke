@@ -3,8 +3,8 @@
 @theme {
   --color-bg: #FFFFFF;
   --color-bg-warm: #FAF9F7;
-  --color-bg-code: #1A1A2E;
-  --color-bg-code-2: #222239;
+  --color-bg-code: #F0F0F4;
+  --color-bg-code-2: #E8E8EE;
   --color-txt: #1A1A2E;
   --color-txt-2: #5A5A72;
   --color-txt-3: #6E6E82;
@@ -18,18 +18,18 @@
   --color-plum: #7C5CBF;
   --color-plum-light: #F1ECF9;
   --color-border: #EBEBEB;
-  --color-term-text: #E0E0E0;
-  --color-term-sub: #B0B0C0;
-  --color-term-muted: #666666;
-  --color-term-muted-hover: #CCCCCC;
-  --color-term-dim: #999999;
-  --color-term-dim-hover: #DDDDDD;
-  --color-term-border-hover: #555555;
+  --color-term-text: #1A1A2E;
+  --color-term-sub: #4A4A5C;
+  --color-term-muted: #8A8A9E;
+  --color-term-muted-hover: #5A5A6E;
+  --color-term-dim: #7A7A8E;
+  --color-term-dim-hover: #4A4A5C;
+  --color-term-border-hover: #C0C0CC;
   --color-feat-icon: #F0F0F2;
   --color-plat-more: #F5F5F5;
   --color-danger: #C53030;
   --color-danger-light: #FDECEC;
-  --color-term-comment: #606078;
+  --color-term-comment: #8A8AA0;
   --color-success: #2E8B57;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
@@ -54,6 +54,14 @@
   --color-danger: #FF6B6B;
   --color-danger-light: #2E1515;
   --color-success: #48BB78;
+  --color-term-text: #E0E0E0;
+  --color-term-sub: #B0B0C0;
+  --color-term-muted: #666666;
+  --color-term-muted-hover: #CCCCCC;
+  --color-term-dim: #999999;
+  --color-term-dim-hover: #DDDDDD;
+  --color-term-border-hover: #555555;
+  --color-term-comment: #606078;
 }
 
 html { scroll-behavior: smooth; scroll-padding-top: 72px }
@@ -836,7 +844,7 @@ nav.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,0.06) }
   overflow-x: auto;
   margin: 0.75rem 0 1rem;
   white-space: pre;
-  border: none;
+  border: 1px solid var(--color-border);
 }
 
 /* Callout / tip box */
@@ -904,7 +912,7 @@ nav.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,0.06) }
   overflow-x: auto;
   margin: 0.75rem 0 0;
   white-space: pre;
-  border: none;
+  border: 1px solid var(--color-border);
 }
 
 .docs-content__faq-list {
@@ -1030,7 +1038,7 @@ nav.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,0.06) }
   line-height: 1.7;
   overflow-x: auto;
   white-space: pre;
-  border: none;
+  border: 1px solid var(--color-border);
 }
 
 /* ── InteractionBlock ── */
@@ -1078,7 +1086,7 @@ nav.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,0.06) }
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-word;
-  border: none;
+  border: 1px solid var(--color-border);
   max-width: 300px;
 }
 
@@ -1677,6 +1685,7 @@ nav.scrolled { box-shadow: 0 1px 8px rgba(0,0,0,0.06) }
   border-radius: 10px;
   overflow: hidden;
   background: var(--color-bg-code);
+  border: 1px solid var(--color-border);
 }
 
 .md-body pre code {

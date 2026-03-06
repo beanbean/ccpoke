@@ -51,7 +51,7 @@ export default function TerminalWidget({ copyLabel, copiedLabel }: Props) {
         if (e.key === "Enter" || e.key === " ") handleCopy();
       }}
       aria-label={copied ? copiedLabel : copyLabel}
-      class={`group bg-bg-code rounded-xl overflow-hidden mx-auto w-full ${
+      class={`group bg-bg-code rounded-xl overflow-hidden mx-auto w-full border border-border ${
         typingComplete ? "cursor-pointer" : ""
       }`}
     >
