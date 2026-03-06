@@ -30,7 +30,8 @@ export class SessionStateManager {
   ) {}
 
   injectMessage(sessionId: string, text: string): InjectResult {
-    const session = this.sessionMap.getBySessionId(sessionId);
+    let session = this.sessionMap.getBySessionId(sessionId);
+    if (!session) session = this.sessionMap.resolveExpired(sessionId);
     if (!session) {
       logDebug(`[Inject] sessionNotFound: sessionId=${sessionId}`);
       return { sessionNotFound: true };

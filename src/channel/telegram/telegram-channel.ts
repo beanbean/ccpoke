@@ -9,7 +9,7 @@ import type { AgentRegistry } from "../../agent/agent-registry.js";
 import { AGENT_DISPLAY_NAMES, AgentName } from "../../agent/types.js";
 import { ConfigManager, type Config } from "../../config-manager.js";
 import { getTranslations, t } from "../../i18n/index.js";
-import type { SessionMap } from "../../tmux/session-map.js";
+import type { SessionMap, TmuxSession } from "../../tmux/session-map.js";
 import type { SessionStateManager } from "../../tmux/session-state.js";
 import type { TmuxBridge } from "../../tmux/tmux-bridge.js";
 import { log, logDebug, logError, logWarn } from "../../utils/log.js";
@@ -53,6 +53,10 @@ export class TelegramChannel implements NotificationChannel {
     this.registerSessionsHandlers();
     this.registerProjectsHandlers();
     this.registerPollingErrorHandler();
+
+    this.pendingReplyStore.setOnCleanup((chatId, messageId) => {
+      this.bot.deleteMessage(chatId, messageId).catch(() => {});
+    });
 
     if (this.sessionMap && this.tmuxBridge && this.registry) {
       this.promptHandler = new PromptHandler(
@@ -274,7 +278,7 @@ export class TelegramChannel implements NotificationChannel {
           return;
         }
 
-        const session = this.sessionMap.getBySessionId(sessionId);
+        const session = this.resolveSession(sessionId);
         if (!session) {
           await this.bot.answerCallbackQuery(query.id, { text: t("chat.sessionExpired") });
           return;
@@ -293,6 +297,7 @@ export class TelegramChannel implements NotificationChannel {
             reply_to_message_id: query.message.message_id,
             reply_markup: {
               force_reply: true,
+              selective: true,
               input_field_placeholder: `${session.project} → Claude`,
             },
           }
@@ -339,14 +344,10 @@ export class TelegramChannel implements NotificationChannel {
       }
 
       const pending = this.pendingReplyStore.get(msg.chat.id, msg.reply_to_message.message_id);
-      if (!pending) {
-        if (this.pendingReplyStore.wasExpired(msg.chat.id, msg.reply_to_message.message_id)) {
-          await this.bot.sendMessage(msg.chat.id, t("chat.sessionExpired"));
-        }
-        return;
-      }
+      if (!pending) return;
 
       this.pendingReplyStore.delete(msg.chat.id, msg.reply_to_message.message_id);
+      this.bot.deleteMessage(msg.chat.id, msg.reply_to_message.message_id).catch(() => {});
 
       if (this.promptHandler) {
         const injected = this.promptHandler.injectElicitationResponse(pending.sessionId, msg.text);
@@ -393,7 +394,7 @@ export class TelegramChannel implements NotificationChannel {
       return;
     }
 
-    const session = this.sessionMap.getBySessionId(sessionId);
+    const session = this.resolveSession(sessionId);
     if (!session) {
       await this.bot.answerCallbackQuery(query.id, { text: t("chat.sessionExpired") });
       return;
@@ -407,6 +408,7 @@ export class TelegramChannel implements NotificationChannel {
         reply_to_message_id: query.message.message_id,
         reply_markup: {
           force_reply: true,
+          selective: true,
           input_field_placeholder: t("chat.placeholder"),
         },
       }
@@ -417,6 +419,11 @@ export class TelegramChannel implements NotificationChannel {
       `[Elicit:pending] msgId=${sent.message_id} → sessionId=${sessionId} project=${session.project}`
     );
     await this.bot.answerCallbackQuery(query.id);
+  }
+
+  private resolveSession(sessionId: string): TmuxSession | undefined {
+    if (!this.sessionMap) return undefined;
+    return this.sessionMap.getBySessionId(sessionId) ?? this.sessionMap.resolveExpired(sessionId);
   }
 
   private registerSessionsHandlers(): void {
@@ -553,7 +560,7 @@ export class TelegramChannel implements NotificationChannel {
       return;
     }
 
-    const session = this.sessionMap.getBySessionId(sessionId);
+    const session = this.resolveSession(sessionId);
     if (!session) {
       await this.bot.answerCallbackQuery(query.id, { text: t("chat.sessionExpired") });
       return;
@@ -584,7 +591,7 @@ export class TelegramChannel implements NotificationChannel {
       return;
     }
 
-    const session = this.sessionMap.getBySessionId(sessionId);
+    const session = this.resolveSession(sessionId);
     if (!session) {
       await this.bot.answerCallbackQuery(query.id, { text: t("chat.sessionExpired") });
       return;
@@ -613,13 +620,12 @@ export class TelegramChannel implements NotificationChannel {
       return;
     }
 
-    const session = this.sessionMap.getBySessionId(sessionId);
+    const session = this.resolveSession(sessionId);
     if (!session) {
       await this.bot.answerCallbackQuery(query.id, { text: t("chat.sessionExpired") });
       return;
     }
 
-    // Kill tmux pane (best-effort)
     if (this.tmuxBridge && session.tmuxTarget) {
       try {
         this.tmuxBridge.killPane(session.tmuxTarget);

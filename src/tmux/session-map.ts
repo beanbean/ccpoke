@@ -47,9 +47,11 @@ interface PersistedSession {
 const SESSIONS_FILE = "sessions.json";
 
 const MAX_SESSIONS = 200;
+const MAX_TOMBSTONES = 500;
 
 export class SessionMap {
   private sessions = new Map<string, TmuxSession>();
+  private tombstones = new Map<string, string>();
   private scanInterval: ReturnType<typeof setInterval> | null = null;
 
   register(
@@ -66,6 +68,7 @@ export class SessionMap {
           logDebug(
             `[Register:dedup] removing ${existingId} (tmuxTarget=${tmuxTarget}) in favor of ${sessionId}`
           );
+          this.addTombstone(existingId, existing.tmuxTarget);
           this.sessions.delete(existingId);
         }
       }
@@ -91,11 +94,24 @@ export class SessionMap {
   }
 
   unregister(sessionId: string): void {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      this.addTombstone(sessionId, session.tmuxTarget);
+    }
     this.sessions.delete(sessionId);
   }
 
   getBySessionId(sessionId: string): TmuxSession | undefined {
     return this.sessions.get(sessionId);
+  }
+
+  resolveExpired(sessionId: string): TmuxSession | undefined {
+    const tmuxTarget = this.tombstones.get(sessionId);
+    if (!tmuxTarget) return undefined;
+    for (const session of this.sessions.values()) {
+      if (session.tmuxTarget === tmuxTarget) return session;
+    }
+    return undefined;
   }
 
   getByProject(project: string): TmuxSession[] {
@@ -168,13 +184,13 @@ export class SessionMap {
 
     const alivePaneTargets = new Set(panes.map((p) => p.target));
 
-    // Remove sessions whose pane no longer runs Claude
     for (const [id, session] of this.sessions) {
       if (!alivePaneTargets.has(session.tmuxTarget)) {
         logDebug(
           `[Scan:remove] id=${id} tmuxTarget=${session.tmuxTarget} project=${session.project}`
         );
         removed.push(session);
+        this.addTombstone(id, session.tmuxTarget);
         this.sessions.delete(id);
       }
     }
@@ -233,5 +249,13 @@ export class SessionMap {
       clearInterval(this.scanInterval);
       this.scanInterval = null;
     }
+  }
+
+  private addTombstone(sessionId: string, tmuxTarget: string): void {
+    if (this.tombstones.size >= MAX_TOMBSTONES) {
+      const oldest = this.tombstones.keys().next().value!;
+      this.tombstones.delete(oldest);
+    }
+    this.tombstones.set(sessionId, tmuxTarget);
   }
 }
