@@ -236,6 +236,7 @@ export const vi: LocaleDict = {
   docsTgChatDesc: "Bạn phải nhấn nút \"Chat\" để bắt đầu — nút này cho ccpoke biết tin nhắn sẽ gửi đến phiên agent nào. Hai cách vào:\n(1) nút Chat trên thông báo task\n(2) /sessions → chọn phiên → Chat\nSau khi nhấn, Telegram mở hộp reply. Gõ prompt, ccpoke inject vào agent đích qua tmux send-keys.",
   docsTgChatDemo: "Qua /sessions:\n\nPhiên đang hoạt động\n🟢 my-app · opus-4.6\n🟢 gia-pha\n\n→ Chọn \"gia-pha\"\n\ngia-pha\n[💬 Chat]  [🗑 Đóng]\n\n→ Nhấn Chat\n\n💬 gia-pha\nNhập tin nhắn bên dưới ↓\n> Tóm tắt thay đổi gần đây\n\n✓ Đã gửi tới phiên",
   docsTgChatRequirement: "Yêu cầu tmux (macOS / Linux). Windows chưa hỗ trợ chat 2 chiều.",
+  docsTgChatGhostDraft: "Trên Telegram iOS, nếu bạn bấm Chat rồi tắt app mà không reply, khi mở lại có thể hiện draft reply cũ. Đây là hành vi của Telegram — bấm ✕ để bỏ qua.",
   docsTgPermissionsTitle: "Xử lý quyền",
   docsTgPermissionsTrigger: "Khi agent cần quyền (ghi file, chạy lệnh, v.v.)",
   docsTgPermissionsDesc: "Agent tạm dừng và gửi thông báo kèm tên tool, tóm tắt. Nhấn Allow để đồng ý, Deny để từ chối. ccpoke inject \"y\" hoặc \"n\" vào agent. Hết hạn sau 10 phút.",

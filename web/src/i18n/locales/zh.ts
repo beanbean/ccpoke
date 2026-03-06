@@ -236,6 +236,7 @@ export const zh: LocaleDict = {
   docsTgChatDesc: "必须先点击 \"Chat\" 按钮 — 这告诉 ccpoke 消息要发送到哪个代理会话。两种入口：\n(1) 任务通知上的 Chat 按钮\n(2) /sessions → 选择会话 → Chat\n点击后，Telegram 打开回复框。输入提示，ccpoke 通过 tmux send-keys 注入目标代理。",
   docsTgChatDemo: "通过 /sessions：\n\n活跃会话\n🟢 my-app · opus-4.6\n🟢 gia-pha\n\n→ 选择 \"gia-pha\"\n\ngia-pha\n[💬 聊天]  [🗑 关闭]\n\n→ 点击聊天\n\n💬 gia-pha\n在下方输入消息 ↓\n> 总结最近的变更\n\n✓ 已发送到会话",
   docsTgChatRequirement: "需要 tmux（macOS / Linux）。Windows 暂不支持双向聊天。",
+  docsTgChatGhostDraft: "在 Telegram iOS 上，如果你点击 Chat 后关闭应用而没有回复，重新打开时可能会显示旧的回复草稿。这是 Telegram 客户端的行为 — 点击 ✕ 即可关闭。",
   docsTgPermissionsTitle: "权限处理",
   docsTgPermissionsTrigger: "当代理需要权限时（写入文件、执行 bash 命令等）",
   docsTgPermissionsDesc: "代理暂停并发送通知，包含工具名称和摘要。点击 \"允许\" 批准或 \"拒绝\"。ccpoke 将 \"y\" 或 \"n\" 注入代理。10 分钟后过期。",

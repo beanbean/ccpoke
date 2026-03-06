@@ -238,6 +238,7 @@ const en = {
   docsTgChatDesc: "You must tap the \"Chat\" button to start — this tells ccpoke which agent session to deliver your message to. Two entry points:\n(1) the Chat button on a task notification\n(2) /sessions → pick a session → Chat\nAfter tapping, Telegram opens a reply box. Type your prompt, ccpoke injects it into the target agent via tmux send-keys.",
   docsTgChatDemo: "via /sessions:\n\nActive sessions\n🟢 my-app · opus-4.6\n🟢 gia-pha\n\n→ Select \"gia-pha\"\n\ngia-pha\n[💬 Chat]  [🗑 Close]\n\n→ Tap Chat\n\n💬 gia-pha\nType your message below ↓\n> Summarize recent changes\n\n✓ Sent to session",
   docsTgChatRequirement: "Requires tmux (macOS / Linux). Windows is not yet supported for two-way chat.",
+  docsTgChatGhostDraft: "On Telegram iOS, if you tap Chat then close the app without replying, reopening may show a stale reply draft. This is a Telegram client behavior — just tap ✕ to dismiss it.",
 
   docsTgPermissionsTitle: "Permission Handling",
   docsTgPermissionsTrigger: "When an agent needs permission (file write, bash command, etc.)",
