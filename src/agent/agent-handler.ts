@@ -32,6 +32,7 @@ export interface AskUserQuestionEvent {
   sessionId: string;
   tmuxTarget?: string;
   cwd?: string;
+  agent?: string;
   questions: AskUserQuestionItem[];
 }
 
@@ -233,7 +234,7 @@ export class AgentHandler {
       const qObj = q as Record<string, unknown>;
       const question = typeof qObj.question === "string" ? qObj.question : "";
       const header = typeof qObj.header === "string" ? qObj.header : "";
-      const multiSelect = qObj.multiSelect === true;
+      const multiSelect = qObj.multiSelect === true || qObj.multiple === true;
       const opts = Array.isArray(qObj.options) ? qObj.options : [];
       const options: AskUserQuestionOption[] = [];
       for (const o of opts) {
@@ -255,6 +256,7 @@ export class AgentHandler {
       sessionId,
       tmuxTarget: typeof obj.tmux_target === "string" ? obj.tmux_target : undefined,
       cwd: typeof obj.cwd === "string" ? obj.cwd : undefined,
+      agent: typeof obj.agent === "string" ? obj.agent : undefined,
       questions,
     };
   }

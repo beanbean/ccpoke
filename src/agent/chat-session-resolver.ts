@@ -14,4 +14,6 @@ export interface ChatSessionResolver {
   ): string;
 
   onStopHook(sessionId: string, model?: string): void;
+
+  resolveTmuxTarget(sessionId: string): string | undefined;
 }

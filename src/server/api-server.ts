@@ -158,10 +158,13 @@ export class ApiServer {
       }
 
       logDebug(`[API] ${ApiRoute.HookAskUserQuestion} accepted`);
+      const agentName = typeof req.query.agent === "string" ? req.query.agent : undefined;
       setImmediate(() => {
-        this.handler?.handleAskUserQuestion(req.body).catch((err: unknown) => {
-          logError(t("askQuestion.hookFailed"), err);
-        });
+        this.handler
+          ?.handleAskUserQuestion({ ...req.body, agent: agentName })
+          .catch((err: unknown) => {
+            logError(t("askQuestion.hookFailed"), err);
+          });
       });
       res.status(200).send("ok");
     });

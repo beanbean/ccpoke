@@ -15,6 +15,7 @@ interface PendingQuestion {
   pendingId: number;
   sessionId: string;
   tmuxTarget: string;
+  agent?: string;
   questions: AskUserQuestionItem[];
   currentIndex: number;
   answers: Map<number, InjectionAnswer>;
@@ -61,6 +62,7 @@ export class AskQuestionHandler {
       pendingId,
       sessionId: event.sessionId,
       tmuxTarget: event.tmuxTarget,
+      agent: event.agent,
       questions: event.questions,
       currentIndex: 0,
       answers: new Map(),
@@ -294,9 +296,9 @@ export class AskQuestionHandler {
       if (!ready) throw new Error("TUI not ready");
 
       if (q.multiSelect) {
-        await this.injector.injectMultiSelect(pq.tmuxTarget, q, answer);
+        await this.injector.injectMultiSelect(pq.tmuxTarget, q, answer, pq.agent);
       } else {
-        await this.injector.injectSingleSelect(pq.tmuxTarget, q, answer);
+        await this.injector.injectSingleSelect(pq.tmuxTarget, q, answer, pq.agent);
       }
     } catch (err) {
       logError(t("askQuestion.injectionFailed"), err);
