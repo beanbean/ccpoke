@@ -64,6 +64,7 @@ export const zh: TranslationKeys = {
     languageMessage: "语言",
     tokenUnchanged: "Token 未更改 — 跳过验证",
     selectAgents: "选择 AI 代理 (空格键切换)",
+    agentDetected: "已检测",
     agentNotInstalled: "{agent} 未安装在此设备上",
     agentHookInstalled: "{agent} hook 已安装",
     agentHookAlreadyInstalled: "{agent} hook 已安装",

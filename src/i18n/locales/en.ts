@@ -65,6 +65,7 @@ export const en: TranslationKeys = {
     languageMessage: "Language",
     tokenUnchanged: "Bot token unchanged — skipping verification",
     selectAgents: "Select AI agents (space to toggle)",
+    agentDetected: "detected",
     agentNotInstalled: "{agent} is not installed on this machine",
     agentHookInstalled: "{agent} hook installed",
     agentHookAlreadyInstalled: "{agent} hook already installed",

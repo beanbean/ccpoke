@@ -65,6 +65,7 @@ export const vi: TranslationKeys = {
     languageMessage: "Ngôn ngữ",
     tokenUnchanged: "Token không đổi — bỏ qua xác thực",
     selectAgents: "Chọn AI agents (ấn cách để chọn)",
+    agentDetected: "đã phát hiện",
     agentNotInstalled: "{agent} chưa được cài trên máy này",
     agentHookInstalled: "Đã cài hook cho {agent}",
     agentHookAlreadyInstalled: "Hook cho {agent} đã được cài rồi",

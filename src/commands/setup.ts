@@ -216,12 +216,14 @@ async function promptAgents(previousAgents: string[]): Promise<string[]> {
 
   const options = providers.map((provider) => {
     const installed = provider.detect();
-    const label = installed ? provider.displayName : `${provider.displayName} ⚠️ not installed`;
+    const label = installed
+      ? `${provider.displayName} (${t("setup.agentDetected")})`
+      : `${provider.displayName} ⚠️`;
 
     return {
       value: provider.name,
       label,
-      hint: installed ? "detected" : "not found on this machine",
+      hint: installed ? "" : t("setup.agentNotInstalled", { agent: provider.displayName }),
     };
   });
 

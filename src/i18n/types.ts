@@ -59,6 +59,7 @@ export interface TranslationKeys {
     languageMessage: string;
     tokenUnchanged: string;
     selectAgents: string;
+    agentDetected: string;
     agentNotInstalled: string;
     agentHookInstalled: string;
     agentHookAlreadyInstalled: string;
