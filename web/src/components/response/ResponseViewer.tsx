@@ -40,7 +40,9 @@ export default function ResponseViewer({ locale: localeProp }: { locale?: Locale
     try {
       const result = await fetchResponse(params);
       if (result.kind !== "success") {
-        setViewState({ kind: "error", message: ts(locale, "responseExpired") });
+        // Distinguish network error from actual data expiration
+        const msgKey = result.message === "network" ? "responseNetwork" : "responseExpired";
+        setViewState({ kind: "error", message: ts(locale, msgKey) });
         return;
       }
 

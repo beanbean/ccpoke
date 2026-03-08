@@ -85,6 +85,7 @@ export const zh: LocaleDict = {
   responseLoading: "正在加载响应...",
   responseNotFound: "未找到响应",
   responseExpired: "响应数据已过期。基本信息显示在上方。",
+  responseNetwork: "无法连接服务器。隧道 URL 可能已更改。",
   responseChanges: "变更",
 
   ariaLanguage: "语言",

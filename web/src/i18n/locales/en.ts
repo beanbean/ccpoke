@@ -83,6 +83,7 @@ const en = {
   responseLoading: "Loading response...",
   responseNotFound: "Response not found",
   responseExpired: "Response data has expired. Basic info is shown above.",
+  responseNetwork: "Cannot connect to server. The tunnel URL may have changed.",
   responseChanges: "Changes",
 
   ariaLanguage: "Language",

@@ -131,6 +131,8 @@ async function startBot(): Promise<void> {
   log(`ccpoke: ${t("bot.started", { port: cfg.hook_port })}`);
 
   const tunnelManager = new TunnelManager();
+  // Use fixed tunnel URL from config if set (e.g. ngrok), skip cloudflared
+  if (cfg.tunnel_url) tunnelManager.setFixedUrl(cfg.tunnel_url);
   apiServer.setTunnelManager(tunnelManager);
   try {
     const tunnelUrl = await tunnelManager.start(cfg.hook_port);

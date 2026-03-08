@@ -12,8 +12,20 @@ export class TunnelManager {
   private url: string | null = null;
   private port: number | null = null;
   private stopped = false;
+  private fixedUrl: string | null = null;
+
+  /** Use a fixed tunnel URL (e.g. ngrok), skipping cloudflared */
+  setFixedUrl(url: string): void {
+    this.fixedUrl = url;
+    this.url = url;
+  }
 
   async start(port: number): Promise<string> {
+    // If a fixed URL is configured, skip cloudflared tunnel
+    if (this.fixedUrl) {
+      this.url = this.fixedUrl;
+      return this.fixedUrl;
+    }
     this.port = port;
     this.stopped = false;
     return this.connectWithRetry();

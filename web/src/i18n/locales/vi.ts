@@ -85,6 +85,7 @@ export const vi: LocaleDict = {
   responseLoading: "Đang tải phản hồi...",
   responseNotFound: "Không tìm thấy phản hồi",
   responseExpired: "Dữ liệu phản hồi đã hết hạn. Thông tin cơ bản hiển thị ở trên.",
+  responseNetwork: "Không thể kết nối server. Tunnel URL có thể đã thay đổi.",
   responseChanges: "Thay đổi",
 
   ariaLanguage: "Ngôn ngữ",

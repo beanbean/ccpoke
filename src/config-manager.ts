@@ -18,6 +18,7 @@ export interface Config {
   discord_user_id?: string;
   slack_bot_token?: string;
   slack_channel_id?: string;
+  tunnel_url?: string;
   hook_port: number;
   hook_secret: string;
   locale: Locale;
@@ -195,6 +196,8 @@ export class ConfigManager {
     if (typeof data.discord_user_id === "string") cfg.discord_user_id = data.discord_user_id;
     if (typeof data.slack_bot_token === "string") cfg.slack_bot_token = data.slack_bot_token;
     if (typeof data.slack_channel_id === "string") cfg.slack_channel_id = data.slack_channel_id;
+    if (typeof data.tunnel_url === "string" && data.tunnel_url.length > 0)
+      cfg.tunnel_url = data.tunnel_url;
 
     return cfg;
   }
