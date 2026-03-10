@@ -188,6 +188,7 @@ export const en: TranslationKeys = {
     retrying: "tunnel retry {attempt}/{max} in {seconds}s...",
     attemptFailed: "tunnel attempt {attempt} failed: {error}",
     autoRestart: "tunnel exited unexpectedly, restarting...",
+    urlChanged: "tunnel URL changed: {old} → {new}",
   },
 
   config: {

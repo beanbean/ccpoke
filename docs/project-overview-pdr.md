@@ -83,6 +83,7 @@
 - Desktop ↔ phone handoff (seamless)
 - Message queue for concurrent inputs
 - /sessions and /projects commands
+- **NEW:** Tunnel URL auto-update in inline keyboard buttons (fixes "Response data has expired" error)
 
 ### Tier 3: Terminal Monitoring (Planned)
 

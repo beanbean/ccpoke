@@ -124,6 +124,7 @@ Emit to Notification Channel
 **Components:**
 - **TelegramChannel** — Bot lifecycle and message handling (sessions, permission requests, ask-question)
 - **TelegramSender** — Message formatting and pagination
+- **SentMessageTracker** — Tracks sent messages (max 50, 4h TTL). When tunnel URL changes, edits inline keyboard buttons to use new URL.
 - **PermissionRequestHandler** — Forward tool-use Allow/Deny to Telegram
 - **AskQuestionHandler** — Forward AskUserQuestion events to Telegram
 - **PendingReplyStore** — Tracks pending user replies (10min TTL, auto-cleanup on shutdown)
@@ -155,6 +156,10 @@ Send to Telegram API
     ↓
 Store Response ID (for edits/updates)
     ↓
+SentMessageTracker records message_id + inline keyboard
+    ↓
+On Tunnel URL change: Edit tracked messages with new URL
+    ↓
 PendingReplyStore tracks reply window (10min)
     ↓
 Auto-cleanup on timeout or explicit destroy()
@@ -162,15 +167,17 @@ Auto-cleanup on timeout or explicit destroy()
 
 **Resource Management:**
 - **PendingReplyStore** — In-memory store bounded by reply TTL (10 minutes)
-- **destroy()** — Explicitly clears all pending replies on shutdown (prevents memory leak)
-- **Auto-expiry** — Entries automatically expire after 10 minutes inactivity
+- **SentMessageTracker** — Max 50 tracked messages, 4h TTL, auto-cleanup on destroy()
+- **destroy()** — Explicitly clears all pending replies & tracked messages on shutdown (prevents memory leak)
+- **Auto-expiry** — Entries automatically expire after TTL inactivity
 
 **Features:**
 - Auto-split long messages
 - Markdown to MarkdownV2 conversion (Telegram)
 - Block Kit structured formatting (Slack)
 - Rate limiting (Telegram: 30 msg/sec)
-- Message editing (progress updates)
+- Message editing (progress updates + URL changes)
+
 
 ### 3. Session Management
 
@@ -260,6 +267,51 @@ Detects agents by matching AGENT_PATTERNS:
 - `Cursor` for Cursor IDE
 - `codex` for Codex CLI
 - `gemini` for Gemini CLI
+
+---
+
+## Data Flow: Tunnel URL Changes & Message Editing
+
+**Scenario:** Cloudflare Quick Tunnel reconnects with new URL → Inline keyboard buttons in Telegram messages updated with new URL
+
+**Problem Fixed:** "Response data has expired" error in Telegram Mini App caused by dead tunnel URLs in inline buttons.
+
+```
+1. TUNNEL RECONNECTION
+   ├─ TunnelManager detects URL change
+   ├─ Calls onUrlChanged(newUrl) listeners
+   └─ Pass new URL to all registered listeners
+
+2. TELEGRAM CHANNEL NOTIFIED
+   ├─ TelegramChannel.handleTunnelUrlChanged(newUrl)
+   ├─ Query SentMessageTracker for tracked messages
+   ├─ For each tracked message:
+   │  ├─ Rebuild inline keyboard buttons with new URL
+   │  ├─ Use editMessageReplyMarkup() API to update buttons
+   │  ├─ Log success/failure
+   │  └─ Remove from tracker if TTL expired
+   └─ Update tracker with fresh timestamp
+
+3. SENT MESSAGE TRACKER MAINTENANCE
+   ├─ Tracks up to 50 messages (FIFO eviction)
+   ├─ Each entry: chat_id, message_id, sent_at, ttl=4h
+   ├─ Auto-cleanup on destroy() for shutdown
+   ├─ Expired entries skipped during bulk edits
+   └─ Returns message_id when sendTelegramMessage() called
+
+4. USER PERSPECTIVE
+   ├─ Inline buttons (Chat, View) were dead links
+   ├─ After edit: buttons point to new tunnel URL
+   ├─ Telegram Mini App works again
+   └─ No notification needed (silent edit)
+
+5. API RESPONSE HANDLING
+   ├─ tryFetch() in web/src/components/response/api.ts
+   ├─ Check Content-Type header before treating 404 as "data expired"
+   ├─ Cloudflare HTML 404 from dead tunnel → network error
+   ├─ Fallback chain continues instead of stopping
+   └─ User can retry on new tunnel connection
+```
 
 ---
 

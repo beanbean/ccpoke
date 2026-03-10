@@ -159,6 +159,17 @@ async function startBot(): Promise<void> {
 
   const handler = new AgentHandler(registry, channel, cfg.hook_port, tunnelManager, chatResolver);
 
+  // When tunnel URL changes (reconnect), update sent Telegram message buttons
+  if (channel instanceof TelegramChannel) {
+    const tgChannel = channel;
+    tunnelManager.onUrlChanged((oldUrl, newUrl) => {
+      log(t("tunnel.urlChanged", { old: oldUrl, new: newUrl }));
+      tgChannel.handleTunnelUrlChanged(oldUrl, newUrl).catch((err: unknown) => {
+        logError("tunnel url-change handler failed", err);
+      });
+    });
+  }
+
   handler.onSessionStart = (rawEvent) => {
     const obj = (typeof rawEvent === "object" && rawEvent !== null ? rawEvent : {}) as Record<
       string,

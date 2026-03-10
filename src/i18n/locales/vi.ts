@@ -188,6 +188,7 @@ export const vi: TranslationKeys = {
     retrying: "tunnel thử lại {attempt}/{max} sau {seconds}s...",
     attemptFailed: "tunnel lần {attempt} thất bại: {error}",
     autoRestart: "tunnel thoát bất ngờ, đang khởi động lại...",
+    urlChanged: "tunnel URL đã thay đổi: {old} → {new}",
   },
 
   config: {

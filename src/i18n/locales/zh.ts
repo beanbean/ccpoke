@@ -186,6 +186,7 @@ export const zh: TranslationKeys = {
     retrying: "隧道重试 {attempt}/{max}，{seconds}秒后...",
     attemptFailed: "隧道第 {attempt} 次尝试失败: {error}",
     autoRestart: "隧道意外退出，正在重新启动...",
+    urlChanged: "隧道 URL 已更改: {old} → {new}",
   },
 
   config: {

@@ -26,6 +26,7 @@ import { PendingReplyStore } from "./pending-reply-store.js";
 import { PermissionRequestHandler } from "./permission-request-handler.js";
 import { formatProjectList } from "./project-list.js";
 import { PromptHandler } from "./prompt-handler.js";
+import { SentMessageTracker } from "./sent-message-tracker.js";
 import { formatSessionList } from "./session-list.js";
 import { sendTelegramMessage } from "./telegram-sender.js";
 
@@ -47,6 +48,7 @@ export class TelegramChannel implements NotificationChannel {
   private promptHandler: PromptHandler | null = null;
   private askQuestionHandler: AskQuestionHandler | null = null;
   private permissionRequestHandler: PermissionRequestHandler | null = null;
+  private sentMessageTracker = new SentMessageTracker();
 
   constructor(cfg: Config, deps?: ChannelDeps) {
     this.cfg = cfg;
@@ -155,10 +157,26 @@ export class TelegramChannel implements NotificationChannel {
     const text = this.formatNotification(data);
 
     try {
-      await sendTelegramMessage(this.bot, this.chatId, text, responseUrl, data.sessionId);
+      const msgId = await sendTelegramMessage(
+        this.bot,
+        this.chatId,
+        text,
+        responseUrl,
+        data.sessionId
+      );
+      // Track message for URL update when tunnel reconnects
+      if (msgId && responseUrl) {
+        const id = new URL(responseUrl).searchParams.get("id");
+        if (id) this.sentMessageTracker.track(this.chatId, msgId, id, data.sessionId);
+      }
     } catch (err: unknown) {
       logError(t("bot.notificationFailed"), err);
     }
+  }
+
+  /** Called when tunnel URL changes — update all tracked message buttons */
+  async handleTunnelUrlChanged(_oldUrl: string, newUrl: string): Promise<void> {
+    await this.sentMessageTracker.updateAllForNewTunnelUrl(this.bot, newUrl);
   }
 
   private formatNotification(data: NotificationData): string {

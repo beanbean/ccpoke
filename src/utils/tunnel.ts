@@ -7,12 +7,20 @@ const TUNNEL_TIMEOUT_MS = 30_000;
 const MAX_RETRIES = 3;
 const RETRY_DELAYS_MS = [5_000, 15_000, 30_000];
 
+export type TunnelUrlChangeListener = (oldUrl: string, newUrl: string) => void;
+
 export class TunnelManager {
   private tunnel: { stop: () => boolean } | null = null;
   private url: string | null = null;
   private port: number | null = null;
   private stopped = false;
   private fixedUrl: string | null = null;
+  private urlChangeListeners: TunnelUrlChangeListener[] = [];
+
+  /** Register a callback for when tunnel URL changes (reconnect) */
+  onUrlChanged(listener: TunnelUrlChangeListener): void {
+    this.urlChangeListeners.push(listener);
+  }
 
   /** Use a fixed tunnel URL (e.g. ngrok), skipping cloudflared */
   setFixedUrl(url: string): void {
@@ -102,18 +110,35 @@ export class TunnelManager {
 
     tunnel.on("exit", (code: number | null) => {
       log(t("tunnel.exited", { code: code ?? 0 }));
+      const oldUrl = this.url;
       this.tunnel = null;
       this.url = null;
 
       if (!this.stopped && this.port) {
         log(t("tunnel.autoRestart"));
         this.connectWithRetry()
-          .then((newUrl) => log(t("tunnel.started", { url: newUrl })))
+          .then((newUrl) => {
+            log(t("tunnel.started", { url: newUrl }));
+            // Notify listeners so sent Telegram messages can be updated
+            if (oldUrl && oldUrl !== newUrl) {
+              this.notifyUrlChanged(oldUrl, newUrl);
+            }
+          })
           .catch(() => logWarn(t("tunnel.failed")));
       }
     });
 
     return url;
+  }
+
+  private notifyUrlChanged(oldUrl: string, newUrl: string): void {
+    for (const listener of this.urlChangeListeners) {
+      try {
+        listener(oldUrl, newUrl);
+      } catch (err) {
+        logWarn(`tunnel url-change listener error: ${err}`);
+      }
+    }
   }
 
   private cleanup(): void {

@@ -175,6 +175,7 @@ export interface TranslationKeys {
     retrying: string;
     attemptFailed: string;
     autoRestart: string;
+    urlChanged: string;
   };
   config: {
     notFound: string;

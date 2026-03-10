@@ -36,11 +36,17 @@ export function parseQueryParams(): ResponseParams | null {
   };
 }
 
-/** Fetch with error distinction: throws NotFoundError on 404, returns null on network error */
+/** Fetch with error distinction: throws NotFoundError on 404 JSON, returns null on network/non-API error */
 async function tryFetch(apiBase: string, id: string): Promise<ResponseData | null> {
   try {
     const response = await fetch(`${apiBase}/api/responses/${id}`);
-    if (response.status === 404) throw new NotFoundError();
+    if (response.status === 404) {
+      // Only treat as "data expired" if our API returned JSON { error: "not_found" }
+      // Cloudflare dead-tunnel returns 404 HTML — treat that as network error
+      const ct = response.headers.get("content-type") ?? "";
+      if (ct.includes("application/json")) throw new NotFoundError();
+      return null;
+    }
     if (!response.ok) return null;
     return await response.json();
   } catch (err) {

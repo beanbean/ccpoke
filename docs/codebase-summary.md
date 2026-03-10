@@ -85,8 +85,9 @@ Implements the **Adapter Pattern** for multi-channel support.
 |------|-----|-----------------|
 | **types.ts** | 25 | `NotificationChannel` interface definition |
 | **telegram/telegram-channel.ts** | 730 | Bot lifecycle, Telegram handlers, notification formatting, session management |
-| **telegram/telegram-sender.ts** | 97 | Message sending, pagination, Markdown escaping |
+| **telegram/telegram-sender.ts** | 97 | Message sending, pagination, Markdown escaping (returns message_id of last page) |
 | **telegram/pending-reply-store.ts** | 56 | In-memory store for tracking pending replies (no TTL, evict at 200 entries, cleanup on reply/shutdown) |
+| **telegram/sent-message-tracker.ts** | - | Tracks sent Telegram messages (max 50, 4h TTL). When tunnel URL changes, edits inline keyboard buttons with new URL. |
 | **telegram/session-list.ts** | 60 | `/sessions` command formatting with state emojis and Chat buttons |
 | **telegram/prompt-handler.ts** | 163 | Forwards elicitation_dialog and idle_prompt events with force_reply |
 | **telegram/permission-request-handler.ts** | 192 | Forward tool-use Allow/Deny decisions to Telegram inline keyboard |
@@ -152,7 +153,7 @@ Handles config persistence and schema migrations.
 
 ### Internationalization (`src/i18n/`)
 
-3 supported locales with parameter substitution.
+3 supported locales with parameter substitution. Added `tunnel.urlChanged` key for tunnel reconnection notifications.
 
 | File | LOC | Purpose |
 |------|-----|---------|
@@ -171,7 +172,7 @@ Handles config persistence and schema migrations.
 | **markdown.ts** | - | Markdown to Telegram MarkdownV2 conversion |
 | **response-store.ts** | - | Stores responses by session ID (24h TTL, max 100) |
 | **stats-format.ts** | - | Formats execution stats (duration, tokens) |
-| **tunnel.ts** | - | Cloudflare tunnel integration with retry logic and auto-restart |
+| **tunnel.ts** | - | Cloudflare tunnel integration with retry logic, auto-restart, and `onUrlChanged(listener)` callback pattern for tunnel reconnection events. |
 | **version-check.ts** | - | npm version checking |
 | **install-detection.ts** | - | Detects installed agents (Claude Code, Cursor, Codex) |
 | **shell-completion.ts** | - | zsh/bash tab completion generation |

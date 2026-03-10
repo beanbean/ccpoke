@@ -9,14 +9,16 @@ const SPLIT_LOOKBACK_RANGE = 200;
 const RETRY_DELAYS_MS = [1000, 2000, 4000];
 const MAX_RETRIES = RETRY_DELAYS_MS.length;
 
+/** Returns the message_id of the last page (the one with the response button, if any) */
 export async function sendTelegramMessage(
   bot: TelegramBot,
   chatId: number,
   text: string,
   responseUrl?: string,
   sessionId?: string
-): Promise<void> {
+): Promise<number | undefined> {
   const pages = splitMessage(text, TELEGRAM_MAX_MESSAGE_LENGTH - PAGINATION_FOOTER_RESERVE);
+  let lastMessageId: number | undefined;
 
   for (let i = 0; i < pages.length; i++) {
     let content = pages[i]!;
@@ -31,8 +33,20 @@ export async function sendTelegramMessage(
       opts.reply_markup = buildResponseReplyMarkup(responseUrl, sessionId);
     }
 
-    await sendWithRetry(bot, chatId, content, pages[i]!, opts, isLastPage, responseUrl, sessionId);
+    const msgId = await sendWithRetry(
+      bot,
+      chatId,
+      content,
+      pages[i]!,
+      opts,
+      isLastPage,
+      responseUrl,
+      sessionId
+    );
+    if (isLastPage) lastMessageId = msgId;
   }
+
+  return lastMessageId;
 }
 
 async function sendWithRetry(
@@ -44,23 +58,24 @@ async function sendWithRetry(
   isLastPage: boolean,
   responseUrl?: string,
   sessionId?: string
-): Promise<void> {
+): Promise<number | undefined> {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
+      let sent: TelegramBot.Message;
       // First attempt: MarkdownV2 with full formatting
       // Subsequent attempts: plain text fallbacks
       if (attempt === 0) {
-        await bot.sendMessage(chatId, content, opts);
+        sent = await bot.sendMessage(chatId, content, opts);
       } else if (attempt === 1) {
         const fallbackOpts: TelegramBot.SendMessageOptions = {};
         if (isLastPage && responseUrl) {
           fallbackOpts.reply_markup = buildResponseReplyMarkup(responseUrl, sessionId);
         }
-        await bot.sendMessage(chatId, rawContent, fallbackOpts);
+        sent = await bot.sendMessage(chatId, rawContent, fallbackOpts);
       } else {
-        await bot.sendMessage(chatId, rawContent);
+        sent = await bot.sendMessage(chatId, rawContent);
       }
-      return;
+      return sent.message_id;
     } catch (error: any) {
       const isLastAttempt = attempt === MAX_RETRIES - 1;
 
